@@ -1,0 +1,100 @@
+nav {
+  height: 74px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.nav-right a {
+  border-left: 1px solid #333;
+}
+
+.nav-right:last-child {
+  border-right: 1px solid #333;
+}
+
+.nav-form {
+  margin-right: 10px;
+}
+
+.modal {
+  background-color: #212121;
+}
+
+.modal-footer {
+  background-color: #212121 !important;
+}
+
+.modalForm {
+  margin-top: 15px;
+}
+
+.modal h4 {
+  text-align: center;
+}
+
+.modalForm i {
+  color: #9e9e9e;
+}
+
+.modalForm .errorMsg {
+  padding-left: 56px;
+  font-size: 12px;
+}
+
+.modalForm .errorMsg2 {
+  padding-left: 11px;
+  font-size: 12px;
+}
+
+.tabs .tab a {
+  color: #039be5;
+}
+
+.tabs .tab a:hover {
+  color: #66BFEA;
+}
+
+.tabs .indicator {
+  background-color: #039be5;
+}
+
+.searchbar {
+  margin-top: -250px;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.parallax-container {
+    width: 100%;
+    height: 600px;
+}
+
+#search input {
+  opacity: 0.4;
+  background: #000;
+}
+
+#search input:focus {
+  opacity: 0.8;
+  background: #fff;
+}
+
+#search .prefix {
+  top: -5px;
+}
+
+#search .postfix {
+  top: 7px;
+}
+
+.section {
+  padding-bottom: 60px;
+}
+
+.content {
+  margin-top: -74px;
+  height: 600px;
+}
