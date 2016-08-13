@@ -3,13 +3,15 @@ import React from 'react'
 import {Modal, Tabs, Tab, Row, Input, Icon} from 'react-materialize'
 import update from 'react-addons-update';
 import {validateEmail, validateEdu, validatePassword} from '../util/validation';
+import ErrorBanner from './errorBanner';
+import {signup} from '../server';
 
 export default class LoginTray extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      // false = login, true = register
-      mode: false,
+      // 0 = opton, 1 = login, 2 = register
+      mode: 0,
       login: {
         email: "",
         emailError: "This field is required.",
@@ -37,8 +39,13 @@ export default class LoginTray extends React.Component {
     var newState = {};
     newState[category] = newSubState;
     newState.pristine = false;
-    console.log(newState);
     this.setState(newState);
+  }
+
+  handleMode(e, mode) {
+    if(e) e.preventDefault();
+    this.state.mode = mode;
+    this.setState(this.state);
   }
 
   handleValidation(value, target, state) {
@@ -56,12 +63,12 @@ export default class LoginTray extends React.Component {
       else {
         state.emailError = '';
       }
-      if(value !== state.conEmail) {
+      if(value.toLowerCase() !== state.conEmail.toLowerCase()) {
         state.conEmailError = 'Does not match your email!';
       }
     }
     else if(target == 'conEmail') {
-      if(value !== state.email) {
+      if(value.toLowerCase() !== state.email.toLowerCase()) {
         state.conEmailError = 'Does not match your email!';
       }
       else {
@@ -83,12 +90,21 @@ export default class LoginTray extends React.Component {
       }
     }
     else if(target == 'conPassword') {
-      if(value !== state.password) {
-        state.conPasswordError = 'Does not match your password!';
+      if(value == state.password) {
+        state.conPasswordError = '';
       }
       else {
-        state.conEmailError = '';
+        state.conPasswordError = 'Does not match your password!';
       }
+    }
+  }
+
+  handleServerResponse(success) {
+    if(success) {
+      this.handleMode(null,3);
+    }
+    else {
+      this.handleMode(null,4);
     }
   }
 
@@ -100,6 +116,69 @@ export default class LoginTray extends React.Component {
     if(this.state.register.conEmailError) { errorMsg.registerConEmailError = <div><p className="red-text errorMsg2">{this.state.register.conEmailError}</p></div>; }
     if(this.state.register.passwordError) { errorMsg.registerPasswordError = <div><p className="red-text errorMsg">{this.state.register.passwordError}</p></div>; }
     if(this.state.register.conPasswordError) { errorMsg.registerConPasswordError = <div><p className="red-text errorMsg2">{this.state.register.conPasswordError}</p></div>; }
+    var formContent = {};
+
+    if(this.state.mode == 0) {
+      formContent = <div>
+        <ul className="tabs">
+          <li className="tab grey darken-4 col s6"><a className="active" onClick={(e) => this.handleMode(e, 1)}>Login</a></li>
+          <li className="tab grey darken-4 col s6"><a onClick={(e) => this.handleMode(e, 2)}>Register</a></li>
+        </ul>
+        <p className="white-text center">Please select one of the above</p>
+      </div>;
+    }
+    else if(this.state.mode == 1) {
+      formContent = <div>
+        <ul className="tabs">
+          <li className="tab grey darken-4 col s6"><a className="active" onClick={(e) => this.handleMode(e, 1)}>Login</a></li>
+          <li className="tab grey darken-4 col s6"><a onClick={(e) => this.handleMode(e, 2)}>Register</a></li>
+        </ul>
+        <Row className="modalForm animated slideInRight">
+          <Input s={12} className={"white-text " + (this.state.login.emailError ? "invalid" : "valid")} label="Email" value={this.state.login.email} onChange={(e) => this.handleChange(e, 'login', 'email')} type='email'><Icon>account_circle</Icon></Input>
+          {errorMsg.loginEmailError}
+          <Input s={12} type='password' className={"white-text " + (this.state.login.passwordError ? "invalid" : "valid")} label="Password" value={this.state.login.password} onChange={(e) => this.handleChange(e, 'login', 'password')}><Icon>lock</Icon></Input>
+          {errorMsg.loginPasswordError}
+          <button className={"btn waves-effect waves-light " + ((this.state.login.emailError || this.state.login.passwordError) ? "disabled" : "")} name="action" type="submit">Login<i className="material-icons right">send</i></button>
+        </Row>
+      </div>;
+    }
+    else if(this.state.mode == 2){
+      formContent = <div>
+        <ul className="tabs">
+          <li className="tab grey darken-4 col s6"><a onClick={(e) => this.handleMode(e, 1)}>Login</a></li>
+          <li className="tab grey darken-4 col s6"><a className="active" onClick={(e) => this.handleMode(e, 2)}>Register</a></li>
+        </ul>
+        <Row className="modalForm animated slideInRight">
+          <Input s={12} className={"white-text " + (this.state.register.emailError ? "invalid" : "valid")} label="Email" value={this.state.register.email} onChange={(e) => this.handleChange(e, 'register', 'email')} type='email'><Icon>account_circle</Icon></Input>
+          {errorMsg.registerEmailError}
+          <Input s={12} label="Confirm Email" className={"white-text " + (this.state.register.conEmailError ? "invalid" : "valid")} value={this.state.register.conEmail} onChange={(e) => this.handleChange(e, 'register', 'conEmail')} type='email'/>
+          {errorMsg.registerConEmailError}
+          <Input s={12} type='password' className={"white-text " + (this.state.register.passwordError ? "invalid" : "valid")} label="Password" value={this.state.register.password} onChange={(e) => this.handleChange(e, 'register', 'password')}><Icon>lock</Icon></Input>
+          {errorMsg.registerPasswordError}
+          <Input s={12} label="Confirm Password" type='password' className={"white-text " + (this.state.register.conPasswordError ? "invalid" : "valid")} value={this.state.register.conPassword} onChange={(e) => this.handleChange(e, 'register', 'conPassword')}/>
+          {errorMsg.registerConPasswordError}
+          <button onClick={(e) => signup(this.state.register.email, this.state.register.password, (result) => this.handleServerResponse(result))} className={"btn waves-effect waves-light " + ((this.state.register.emailError || this.state.register.conEmailError || this.state.register.passwordError || this.state.register.conPasswordError) ? "disabled" : "")} name="action" type="submit">Register<i className="material-icons right">send</i></button>
+        </Row>
+      </div>;
+    }
+    else if(this.state.mode == 3){
+      formContent = <div className="card green darken-1">
+        <div className="card-content white-text">
+          <p>Success! Please check the email you provided for a verification link.</p>
+        </div>
+        <button onClick={(e) => this.handleMode(e, 0)} className="btn waves-effect waves-light grey darken-1" type="submit" name="action">Back
+          <i className="material-icons left">keyboard_arrow_left</i>
+        </button>
+      </div>;
+    }
+    else {
+      formContent = <div>
+        <ErrorBanner />
+        <button onClick={(e) => this.handleMode(e, 0)} className="btn waves-effect waves-light grey darken-1" type="submit" name="action">Back
+          <i className="material-icons left">keyboard_arrow_left</i>
+        </button>
+      </div>;
+    }
     return (
       <div>
         <ul className="right nav-right">
@@ -111,28 +190,9 @@ export default class LoginTray extends React.Component {
               <li><a className="waves-effect waves-light">Register</a></li>
             </div>
           }>
-            <Tabs className='grey darken-4'>
-              <Tab title="Login">
-                <Row className="modalForm">
-                  <Input s={12} className={"white-text " + (this.state.login.emailError ? "invalid" : "valid")} label="Email" value={this.state.login.email} onChange={(e) => this.handleChange(e, 'login', 'email')} type='email'><Icon>account_circle</Icon></Input>
-                  {errorMsg.loginEmailError}
-                  <Input s={12} type='password' className={"white-text " + (this.state.login.passwordError ? "invalid" : "valid")} label="Password" value={this.state.login.password} onChange={(e) => this.handleChange(e, 'login', 'password')}><Icon>lock</Icon></Input>
-                  {errorMsg.loginPasswordError}
-                </Row>
-              </Tab>
-              <Tab title="Register" active>
-                <Row className="modalForm">
-                  <Input s={12} className={"white-text " + (this.state.register.emailError ? "invalid" : "valid")} label="Email" value={this.state.register.email} onChange={(e) => this.handleChange(e, 'register', 'email')} type='email'><Icon>account_circle</Icon></Input>
-                  {errorMsg.registerEmailError}
-                  <Input s={12} label="Confirm Email" className={"white-text " + (this.state.register.conEmailError ? "invalid" : "valid")} value={this.state.register.conEmail} onChange={(e) => this.handleChange(e, 'register', 'conEmail')} type='email'/>
-                  {errorMsg.registerConEmailError}
-                  <Input s={12} type='password' className={"white-text " + (this.state.register.passwordError ? "invalid" : "valid")} label="Password" value={this.state.register.password} onChange={(e) => this.handleChange(e, 'register', 'password')}><Icon>lock</Icon></Input>
-                  {errorMsg.registerPasswordError}
-                  <Input s={12} label="Confirm Password" type='password' className={"white-text " + (this.state.register.conPasswordError ? "invalid" : "valid")} value={this.state.register.conPassword} onChange={(e) => this.handleChange(e, 'register', 'conPassword')}/>
-                  {errorMsg.registerConPasswordError}
-                </Row>
-              </Tab>
-            </Tabs>
+            <div className='grey darken-4'>
+              {formContent}
+            </div>
           </Modal>
         </ul>
       </div>

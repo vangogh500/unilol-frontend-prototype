@@ -12,7 +12,10 @@
     "express-jsonschema": "^1.1.0",
     "jsonwebtoken": "^5.7.0",
     "mongo-express": "^0.30.40",
-    "mongodb": "^2.1.14"
+    "mongodb": "^2.1.14",
+    "mongoose": "^4.5.8",
+    "nodemailer": "^2.5.0",
+    "nodemailer-smtp-transport": "^2.6.0"
   },
   "devDependencies": {
     "eslint": "^2.4.0",
