@@ -8,8 +8,7 @@ var UserSchema = mongoose.Schema({
     lastName: String
   },
   email: { type: String, required: true, unique: true},
-  password: { type: String, required: true},
-  emailVerified: {type: Boolean, required: true, default: false}
+  password: { type: String, required: true}
 });
 
 var User = mongoose.model('User', UserSchema);

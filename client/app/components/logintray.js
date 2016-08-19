@@ -4,7 +4,7 @@ import {Modal, Tabs, Tab, Row, Input, Icon} from 'react-materialize'
 import update from 'react-addons-update';
 import {validateEmail, validateEdu, validatePassword} from '../util/validation';
 import ErrorBanner from './errorBanner';
-import {signup} from '../server';
+import {signup, resendEmailVerification} from '../server';
 
 export default class LoginTray extends React.Component {
   constructor(props) {
@@ -27,7 +27,14 @@ export default class LoginTray extends React.Component {
         passwordError: "This field is required.",
         conPassword: "",
         conPasswordError: ""
-      }
+      },
+      resend: {
+        email: "",
+        emailError: "This field is required.",
+        conEmail: "",
+        conEmailError: ""
+      },
+      serverMsg: ""
     };
   }
   handleChange(e, category, target) {
@@ -99,11 +106,12 @@ export default class LoginTray extends React.Component {
     }
   }
 
-  handleServerResponse(success) {
+  handleServerResponse(success, msg) {
     if(success) {
       this.handleMode(null,3);
     }
     else {
+      this.state.serverMsg = msg;
       this.handleMode(null,4);
     }
   }
@@ -116,6 +124,8 @@ export default class LoginTray extends React.Component {
     if(this.state.register.conEmailError) { errorMsg.registerConEmailError = <div><p className="red-text errorMsg2">{this.state.register.conEmailError}</p></div>; }
     if(this.state.register.passwordError) { errorMsg.registerPasswordError = <div><p className="red-text errorMsg">{this.state.register.passwordError}</p></div>; }
     if(this.state.register.conPasswordError) { errorMsg.registerConPasswordError = <div><p className="red-text errorMsg2">{this.state.register.conPasswordError}</p></div>; }
+    if(this.state.resend.emailError) { errorMsg.resendEmailError = <div><p className="red-text errorMsg2">{this.state.resend.emailError}</p></div>; }
+    if(this.state.resend.conEmailError) { errorMsg.resendConEmailError = <div><p className="red-text errorMsg2">{this.state.resend.conEmailError}</p></div>; }
     var formContent = {};
 
     if(this.state.mode == 0) {
@@ -157,26 +167,44 @@ export default class LoginTray extends React.Component {
           {errorMsg.registerPasswordError}
           <Input s={12} label="Confirm Password" type='password' className={"white-text " + (this.state.register.conPasswordError ? "invalid" : "valid")} value={this.state.register.conPassword} onChange={(e) => this.handleChange(e, 'register', 'conPassword')}/>
           {errorMsg.registerConPasswordError}
-          <button onClick={(e) => signup(this.state.register.email, this.state.register.password, (result) => this.handleServerResponse(result))} className={"btn waves-effect waves-light " + ((this.state.register.emailError || this.state.register.conEmailError || this.state.register.passwordError || this.state.register.conPasswordError) ? "disabled" : "")} name="action" type="submit">Register<i className="material-icons right">send</i></button>
+          <button onClick={(e) => signup(this.state.register.email, this.state.register.password, (result, msg) => this.handleServerResponse(result, msg))} disabled={(this.state.register.emailError || this.state.register.conEmailError || this.state.register.passwordError || this.state.register.conPasswordError)} className={"btn waves-effect waves-light " + ((this.state.register.emailError || this.state.register.conEmailError || this.state.register.passwordError || this.state.register.conPasswordError) ? "disabled" : "")} name="action" type="submit">Register<i className="material-icons right">send</i></button>
         </Row>
+        <p className="grey-text">Didnt receive a verification link? Click <a onClick={(e) => this.handleMode(e,5)}>here</a></p>
       </div>;
     }
+    // server success
     else if(this.state.mode == 3){
-      formContent = <div className="card green darken-1">
-        <div className="card-content white-text">
-          <p>Success! Please check the email you provided for a verification link.</p>
+      formContent = <div>
+        <div className="card green darken-1">
+          <div className="card-content white-text">
+            <p>Success! Please check the email you provided for a verification link.</p>
+          </div>
         </div>
         <button onClick={(e) => this.handleMode(e, 0)} className="btn waves-effect waves-light grey darken-1" type="submit" name="action">Back
           <i className="material-icons left">keyboard_arrow_left</i>
         </button>
       </div>;
     }
-    else {
+    // server error
+    else if(this.state.mode == 4){
       formContent = <div>
-        <ErrorBanner />
+        <ErrorBanner>{this.state.serverMsg}</ErrorBanner>
         <button onClick={(e) => this.handleMode(e, 0)} className="btn waves-effect waves-light grey darken-1" type="submit" name="action">Back
           <i className="material-icons left">keyboard_arrow_left</i>
         </button>
+      </div>;
+    }
+    //resend verification link
+    else if(this.state.mode == 5){
+      formContent = <div>
+        <h5 className="blue-text center">Resend Verification Link</h5>
+        <Row className="modalForm animated slideInRight">
+          <Input s={12} className={"white-text " + (this.state.resend.emailError ? "invalid" : "valid")} label="Email" value={this.state.resend.email} onChange={(e) => this.handleChange(e, 'resend', 'email')} type='email'><Icon>account_circle</Icon></Input>
+          {errorMsg.resendEmailError}
+          <Input s={12} label="Confirm Email" className={"white-text " + (this.state.resend.conEmailError ? "invalid" : "valid")} value={this.state.resend.conEmail} onChange={(e) => this.handleChange(e, 'resend', 'conEmail')} type='email'/>
+          {errorMsg.resendConEmailError}
+          <button onClick={(e) => resendEmailVerification(this.state.resend.email, (result, msg) => this.handleServerResponse(result, msg))} disabled={(this.state.resend.emailError || this.state.resend.conEmailError)} className={"btn waves-effect waves-light " + ((this.state.resend.emailError || this.state.resend.conEmailError) ? "disabled" : "")} name="action" type="submit">Send<i className="material-icons right">send</i></button>
+        </Row>
       </div>;
     }
     return (

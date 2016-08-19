@@ -1,7 +1,8 @@
 var mongoose = require('mongoose');
 
 var emailVerificationTokenSchema = mongoose.Schema({
-  _userId: {type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User'},
+  email: {type: String, required: true, unique: [true, "email must be unique"]},
+  password: {type: String, required: true },
   token: {type: String, required: true},
   createdAt: {type: Date, required: true, default: Date.now, expires: '4h'}
 });

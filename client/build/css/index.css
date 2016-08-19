@@ -60,6 +60,10 @@ nav {
   font-size: 12px;
 }
 
+.content {
+  margin-top: 100px;
+}
+
 .modal-content {
   overflow-x: hidden;
 }
@@ -115,4 +119,38 @@ nav {
 
 .section {
   padding-bottom: 60px;
+}
+
+.loadAnimation-container {
+	width: 100%;
+  padding-top: 10px;
+  height: 50px;
+  background: #fff;
+}
+
+@keyframes loading {
+    0% {
+      left: 0px;
+      background-color: #fff176;
+    }
+    25% {
+      left: 100px;
+      background-color: #212121;
+    }
+    50% {
+      background-color: #fff176;
+    }
+    75% {
+      background-color: #212121;
+    }
+    100% {
+      background-color: #fff176;
+    }
+}
+
+.dot {
+  width: 30px;
+  height: 30px;
+  animation: loading 5s;
+  border-radius:30px;
 }

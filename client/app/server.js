@@ -30,9 +30,8 @@ function sendXHR(verb, resource, body, cb, errorCb) {
       var responseText = xhr.responseText;
       if (errorCb) {
         // We were given a custom error handler.
-        errorCb(statusCode);
+        errorCb(xhr.status + ": " + xhr.responseText);
       }
-      UnilolError('Could not ' + verb + " " + resource + ": Received " + statusCode + " " + statusText + ": " + responseText);
     }
   });
 
@@ -41,12 +40,12 @@ function sendXHR(verb, resource, body, cb, errorCb) {
 
   // Network failure: Could not connect to server.
   xhr.addEventListener('error', function() {
-    UnilolError('Could not ' + verb + " " + resource + ": Could not connect to the server.");
+    errorCb("network failure: could not connect to server");
   });
 
   // Network failure: request took too long to complete.
   xhr.addEventListener('timeout', function() {
-    UnilolError('Could not ' + verb + " " + resource + ": Request timed out.");
+    errorCb("timeout: request timed out (please try again)");
   });
 
   switch (typeof(body)) {
@@ -71,12 +70,31 @@ function sendXHR(verb, resource, body, cb, errorCb) {
 }
 
 export function signup(email, password, cb) {
-  sendXHR('POST', '/user', { email: email, password: password }, () => {
+  sendXHR('POST', '/emailVerificationToken', { email: email, password: password }, () => {
     // Called when signup succeeds! Return true for success.
-    cb(true);
-  }, () => {
+    cb(true, null);
+  }, (msg) => {
     // Called when the server returns an error code!
     // Return false for failure.
-    cb(false);
+    cb(false, msg);
   });
+}
+
+export function resendEmailVerification(email, cb) {
+  sendXHR('GET', '/emailVerificationToken/' + email, {}, () => {
+    // Called when signup succeeds! Return true for success.
+    cb(true, null);
+  }, (msg) => {
+    // Called when the server returns an error code!
+    // Return false for failure.
+    cb(false, msg);
+  });
+}
+
+export function verifyEmail(token, cb) {
+  sendXHR('POST', '/user', {token: token}, () => {
+    cb(true, null);
+  }, (msg) => {
+    cb(false, msg);
+  })
 }

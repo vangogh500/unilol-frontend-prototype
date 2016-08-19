@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom';
 import { Router, Route, IndexRoute, hashHistory } from 'react-router'
 import LoginTray from './components/logintray'
+import EmailVerification from './components/emailVerification'
 import {Navbar} from 'react-materialize'
 
 var Navigation = React.createClass({
@@ -22,7 +23,7 @@ var Navigation = React.createClass({
 var Banner = React.createClass({
   render() {
     return(
-      <div className="content banner-container">
+      <div className="banner-container">
         <img id="banner" className="center" src="img/banner.jpg" />
         <div className="row container searchbar">
           <form className="animated fadeInDown">
@@ -52,7 +53,7 @@ var Footer =  React.createClass({
   }
 })
 
-var App = React.createClass({
+class App extends React.Component {
   render() {
     return (
       <div>
@@ -62,12 +63,13 @@ var App = React.createClass({
       </div>
     )
   }
-})
+}
 
 ReactDOM.render((
   <Router history={hashHistory}>
     <Route path="/" component={App}>
       <IndexRoute component={Banner}/>
+      <Route path="verifyEmail/:token" component={EmailVerification} />
     </Route>
   </Router>
 ), document.getElementById('app'))
