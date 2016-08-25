@@ -16,6 +16,13 @@ export function getToken() {
   return null;
 }
 
+export function getUser() {
+  if(isUserLoggedIn()) {
+    return user;
+  }
+  return null;
+}
+
 /**
  * Get the user ID of the currently authenticated user.
  */

@@ -1,24 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom';
-import { Router, Route, IndexRoute, hashHistory } from 'react-router'
-import LoginTray from './components/logintray'
+import { Router, Route, IndexRoute, browserHistory } from 'react-router'
+import NavApp from './containers/navApp'
+import Profile from './components/profile'
 import EmailVerification from './components/emailVerification'
-import {Navbar} from 'react-materialize'
-
-var Navigation = React.createClass({
-  render() {
-    return(
-      <nav className="grey darken-4 animated bounceInDown">
-        <div className="nav-wrapper">
-          <div className="container">
-            <a href="#" className="brand-logo waves-effect waves-light">UNI<span className="blue-text">LOL</span></a>
-            <LoginTray />
-          </div>
-        </div>
-      </nav>
-    )
-  }
-})
+import thunk from 'redux-thunk'
+import { createStore, applyMiddleware } from 'redux'
+import unilol from './reducers'
+import { Provider } from 'react-redux'
 
 var Banner = React.createClass({
   render() {
@@ -57,7 +46,7 @@ class App extends React.Component {
   render() {
     return (
       <div>
-        <Navigation />
+        <NavApp />
         {this.props.children}
         <Footer />
       </div>
@@ -65,11 +54,18 @@ class App extends React.Component {
   }
 }
 
+var store = applyMiddleware(thunk)(createStore)(unilol)
+
+console.log(store.getState())
+
 ReactDOM.render((
-  <Router history={hashHistory}>
-    <Route path="/" component={App}>
-      <IndexRoute component={Banner}/>
-      <Route path="verifyEmail/:token" component={EmailVerification} />
-    </Route>
-  </Router>
+  <Provider store={store}>
+    <Router history={browserHistory}>
+      <Route path="/" component={App}>
+        <IndexRoute component={Banner}/>
+        <Route path="verifyEmail/:token" component={EmailVerification} />
+        <Route path="profile" component={Profile} />
+      </Route>
+    </Router>
+  </Provider>
 ), document.getElementById('app'))

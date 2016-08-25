@@ -1,14 +1,14 @@
-import {getToken} from './credentials';
+import {getToken, updateCredentials} from './credentials';
 
 /**
  * Properly configure+send an XMLHttpRequest with error handling, authorization token,
  * and other needed properties.
  * @prop errorCb: Optional argument -- called when the server responds with an error code.
  */
-function sendXHR(verb, resource, body, cb, errorCb) {
-  var xhr = new XMLHttpRequest();
-  xhr.open(verb, resource);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + getToken());
+function sendXHR(verb, resource, body, cb) {
+  var xhr = new XMLHttpRequest()
+  xhr.open(verb, resource)
+  xhr.setRequestHeader('Authorization', 'Bearer ');
 
   // The below comment tells ESLint that UnilolError is a global.
   // Otherwise, ESLint would complain about it! (See what happens in Atom if
@@ -17,21 +17,17 @@ function sendXHR(verb, resource, body, cb, errorCb) {
 
   // Response received from server. It could be a failure, though!
   xhr.addEventListener('load', function() {
-    var statusCode = xhr.status;
-    var statusText = xhr.statusText;
+    var statusCode = xhr.status
+    var resObj = JSON.parse(xhr.responseText)
+    resObj.statusCode = statusCode
+    console.log(resObj)
     if (statusCode >= 200 && statusCode < 300 && xhr.readyState == 4) {
       // Success: Status code is in the [200, 300) range.
       // Call the callback with the final XHR object.
-      cb(xhr);
+      cb(true, resObj)
     } else {
       // Client or server error.
-      // The server may have included some response text with details concerning
-      // the error.
-      var responseText = xhr.responseText;
-      if (errorCb) {
-        // We were given a custom error handler.
-        errorCb(xhr.status + ": " + xhr.responseText);
-      }
+      cb(false, resObj)
     }
   });
 
@@ -40,61 +36,47 @@ function sendXHR(verb, resource, body, cb, errorCb) {
 
   // Network failure: Could not connect to server.
   xhr.addEventListener('error', function() {
-    errorCb("network failure: could not connect to server");
+    cb(false, { statusCode: -106, msg: "Could not contact server. Please check your connection and try again." })
   });
 
   // Network failure: request took too long to complete.
   xhr.addEventListener('timeout', function() {
-    errorCb("timeout: request timed out (please try again)");
+    cb(false, { statusCode: -105, msg: "The request has timed out. Please check your connection and try again."})
   });
 
   switch (typeof(body)) {
     case 'undefined':
       // No body to send.
-      xhr.send();
-      break;
+      xhr.send()
+      break
     case 'string':
       // Tell the server we are sending text.
-      xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
-      xhr.send(body);
-      break;
+      xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8")
+      xhr.send(body)
+      break
     case 'object':
       // Tell the server we are sending JSON.
-      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
       // Convert body into a JSON string.
-      xhr.send(JSON.stringify(body));
-      break;
+      xhr.send(JSON.stringify(body))
+      break
     default:
-      throw new Error('Unknown body type: ' + typeof(body));
+      throw new Error('Unknown body type: ' + typeof(body))
   }
 }
 
-export function signup(email, password, cb) {
-  sendXHR('POST', '/emailVerificationToken', { email: email, password: password }, () => {
-    // Called when signup succeeds! Return true for success.
-    cb(true, null);
-  }, (msg) => {
-    // Called when the server returns an error code!
-    // Return false for failure.
-    cb(false, msg);
-  });
+export function signUp(email, password, cb) {
+  sendXHR('POST', '/emailVerificationToken', { email: email, password: password }, cb)
 }
 
 export function resendEmailVerification(email, cb) {
-  sendXHR('GET', '/emailVerificationToken/' + email, {}, () => {
-    // Called when signup succeeds! Return true for success.
-    cb(true, null);
-  }, (msg) => {
-    // Called when the server returns an error code!
-    // Return false for failure.
-    cb(false, msg);
-  });
+  sendXHR('GET', '/emailVerificationToken/' + email, {}, cb)
 }
 
 export function verifyEmail(token, cb) {
-  sendXHR('POST', '/user', {token: token}, () => {
-    cb(true, null);
-  }, (msg) => {
-    cb(false, msg);
-  })
+  sendXHR('POST', '/user', {token: token}, cb)
+}
+
+export function signIn(email, password, cb) {
+  sendXHR('POST', '/login', { email: email, password: password }, cb)
 }

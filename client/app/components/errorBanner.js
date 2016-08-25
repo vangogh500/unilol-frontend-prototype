@@ -6,7 +6,7 @@ import {hideElement} from '../util';
  */
 export default class ErrorBanner extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
   }
 
   render() {
@@ -18,6 +18,6 @@ export default class ErrorBanner extends React.Component {
           Please <a onClick={() => window.location.reload()}>refresh the web page</a> and try again.
         </div>
       </div>
-    );
+    )
   }
 }

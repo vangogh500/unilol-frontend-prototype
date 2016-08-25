@@ -50,16 +50,6 @@ nav {
   color: #9e9e9e;
 }
 
-.modalForm .errorMsg {
-  padding-left: 56px;
-  font-size: 12px;
-}
-
-.modalForm .errorMsg2 {
-  padding-left: 11px;
-  font-size: 12px;
-}
-
 .content {
   margin-top: 100px;
 }
@@ -121,36 +111,24 @@ nav {
   padding-bottom: 60px;
 }
 
-.loadAnimation-container {
-	width: 100%;
-  padding-top: 10px;
-  height: 50px;
-  background: #fff;
+.modal-content .loader {
+  margin-top: 100px;
+  margin-bottom: 70px;
 }
 
-@keyframes loading {
-    0% {
-      left: 0px;
-      background-color: #fff176;
-    }
-    25% {
-      left: 100px;
-      background-color: #212121;
-    }
-    50% {
-      background-color: #fff176;
-    }
-    75% {
-      background-color: #212121;
-    }
-    100% {
-      background-color: #fff176;
-    }
+.modal-content .alert {
+  padding: 70px;
 }
 
-.dot {
-  width: 30px;
-  height: 30px;
-  animation: loading 5s;
-  border-radius:30px;
+.modal-content .try-again {
+  margin: 0px 30px;
+}
+
+.form-button {
+  margin-top: 20px;
+  float: right;
+}
+
+.form-extra {
+  margin-top: 20px;
 }

@@ -30,15 +30,8 @@ app.use(express.static('../client/build'));
 var User = require('./models/user.js');
 var EmailVerificationToken = require('./models/EmailVerificationToken.js');
 
-/**
- * Strips a password from a user object.
- */
-function stripPassword(user) {
-  if (user !== null) {
-    delete user.password;
-  }
-  return user;
-}
+
+var RESPONSE_MSGS = require('./serverResponseMsgs.js')
 
 /*
  * Registering logic:
@@ -50,7 +43,7 @@ function stripPassword(user) {
  * Create verification token
  * verb: POST
  * path: '/emailVerificationToken'
- * @params: email, password
+ * @param: email, password
  * logic:
  *  1. check that user with @email (trimmed and lower cased) does not exists
  *  2. hash and salt @password
@@ -62,24 +55,26 @@ function stripPassword(user) {
  *  500: database error, bcrypt error, nodemailer error
  */
 app.post('/emailVerificationToken', function(req, res) {
+  const ERROR_401 = "A user with the following email already exists."
+  const SUCCESS_200 = "Success! Please check your email for a verification link."
   var user = req.body;
   user.email = user.email.trim().toLowerCase();
   User.findOne({email: req.body.email}, function(error, found) {
     if(error) {
-      res.status(500).send(error);
+      res.status(500).send({msg: RESPONSE_MSGS.RESPONSE_MSGS.ERROR_500});
     }
     else if(found) {
-        res.status(401).send("a user with the following email already exists")
+        res.status(401).send({msg: ERROR_401})
     }
     else {
       bcrypt.hash(user.password, 10, function(e, hash) {
         if(e) {
-          res.status(500).send(e);
+          res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
         }
         else {
           var emailVerificationToken = new EmailVerificationToken({email: user.email, password: hash});
           emailVerificationToken.createVerificationToken(function (err, token) {
-            if (err) { res.status(500).send({msg: err.message}); }
+            if (err) { res.status(500).send({msg: RESPONSE_MSGS.ERROR_500}); }
             else {
               var link = req.protocol + "://" + req.get('host') + "/#/verifyEmail/" + token;
               var mailOptions = {
@@ -91,9 +86,9 @@ app.post('/emailVerificationToken', function(req, res) {
               };
               transporter.sendMail(mailOptions, function(error){
                   if(error){
-                      res.status(500).send(error);
-                  }else{
-                      res.send();
+                      res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
+                  } else{
+                      res.send({msg: SUCCESS_200});
                   }
               });
             }
@@ -108,7 +103,7 @@ app.post('/emailVerificationToken', function(req, res) {
  * Resend verification token
  * verb: GET
  * path: '/emailVerificationToken'
- * @params: email
+ * @param: email
  * logic:
  *  1. find email verification token with @email
  *  2. email verification token to @email
@@ -118,10 +113,11 @@ app.post('/emailVerificationToken', function(req, res) {
  *  500: database error, nodemailer error
  */
  app.get('/emailVerificationToken/:email', function(req,res) {
-   console.log(req.params.email);
+   const SUCCESS_200 = "Success! Verification link has been delivered.";
+   const ERROR_404 = "Could not find a registration for the following email. Please try registering with your email again."
    EmailVerificationToken.findOne({email: req.params.email}, function(err, found) {
      if(err) {
-       res.status(500).send(err);
+       res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
      }
      else if(found){
        var link = req.protocol + "://" + req.get('host') + "/#/verifyEmail/" + found.token;
@@ -134,25 +130,23 @@ app.post('/emailVerificationToken', function(req, res) {
        };
        transporter.sendMail(mailOptions, function(error){
            if(error){
-               res.status(500).send(error);
+               res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
            }else{
-               res.send();
+               res.send({msg: SUCCESS_200});
            }
        });
      }
      else {
-       res.status(404).send("could not find a registration key for the following email. please try registering with the same email again");
+       res.status(404).send({msg: ERROR_404});
      }
   });
  });
-
-
 
 /**
  * Verify token and create user
  * verb: POST
  * path: '/user'
- * @params: token
+ * @param: token
  * logic:
  *  1. check that an email verification token exists with @token
  *  2. create user using the password and email from token
@@ -163,57 +157,82 @@ app.post('/emailVerificationToken', function(req, res) {
  *  500: database error
  */
 app.post('/user', function(req, res) {
+  const SUCCESS_200 = "Success! You may now login with your email and password.";
+  const ERROR_404 = "Uh oh. Invalid verification link.";
   EmailVerificationToken.findOne({token: req.body.token}, function(err, token) {
     if(err) {
-      res.status(500).send(err);
+      res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
     }
     else if(token) {
       var newUser = new User({email: token.email, password: token.password});
       newUser.save(function(err) {
         if(err) {
-          res.status(500).send(err);
+          res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
         }
         else {
           token.remove();
-          res.send();
+          res.send({msg: SUCCESS_200});
         }
       });
     }
     else {
-      res.status(401).send("invalid verification link");
+      res.status(401).send({msg: ERROR_404});
     }
   });
 });
 
+/**
+ * Login
+ * verb: POST
+ * path: '/login'
+ * @param: email, password
+ * logic:
+ *  1. find user with @email
+ *  2. compare password field with @password using Bcrypt
+ *  3. return json web token and user object
+ * response codes:
+ *  200: success
+ *  401: password or email is incorrect
+ *  500: database error, bcrypt error
+ * @return: token, user
+ */
 app.post('/login', function(req, res) {
+  const ERROR_401 = "Invalid email or password."
   var loginData = req.body;
+  if(!loginData.email || !loginData.password ) {
+    res.status(400).send({msg: "bad request"})
+    return;
+  }
   var email = loginData.email.trim().toLowerCase();
   User.findOne({email: email}, 'email password', function(err, found) {
     if(err) {
-      res.status(500).send({msg: err});
+      res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
+      return;
     }
     else if(found) {
       bcrypt.compare(loginData.password, found.password, function(err, success) {
         if(err) {
-          res.status(500).send({msg: err});
+          res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
         }
         else if(success) {
           jwt.sign({id: found._id}, secretKey, { expiresIn: '7 days'}, function(token) {
+            console.log("test");
             found = found.toObject();
-            stripPassword(found);
+            delete found.password;
             res.send({
-                user: found,
-                token: token
+              user: found,
+              token: token,
+              msg: "Success! Please continue to your profile page"
             });
           });
         }
         else {
-          res.status(401).end();
+          res.status(401).send({ msg: ERROR_401 });
         }
       });
     }
     else {
-      res.status(401).end();
+      res.status(401).send({ msg: ERROR_401 });
     }
   });
 });
