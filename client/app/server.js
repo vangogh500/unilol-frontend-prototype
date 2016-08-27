@@ -5,10 +5,10 @@ import {getToken, updateCredentials} from './credentials';
  * and other needed properties.
  * @prop errorCb: Optional argument -- called when the server responds with an error code.
  */
-function sendXHR(verb, resource, body, cb) {
+function sendXHR(verb, resource, body, cb, token) {
   var xhr = new XMLHttpRequest()
   xhr.open(verb, resource)
-  xhr.setRequestHeader('Authorization', 'Bearer ');
+  xhr.setRequestHeader('Authorization', 'Bearer ' + token);
 
   // The below comment tells ESLint that UnilolError is a global.
   // Otherwise, ESLint would complain about it! (See what happens in Atom if
@@ -18,7 +18,10 @@ function sendXHR(verb, resource, body, cb) {
   // Response received from server. It could be a failure, though!
   xhr.addEventListener('load', function() {
     var statusCode = xhr.status
-    var resObj = JSON.parse(xhr.responseText)
+    var resObj = {}
+    if(xhr.responseText){
+      resObj = JSON.parse(xhr.responseText)
+    }
     resObj.statusCode = statusCode
     console.log(resObj)
     if (statusCode >= 200 && statusCode < 300 && xhr.readyState == 4) {
@@ -79,4 +82,17 @@ export function verifyEmail(token, cb) {
 
 export function signIn(email, password, cb) {
   sendXHR('POST', '/login', { email: email, password: password }, cb)
+}
+
+export function updateProfile(user, cb, token) {
+  console.log(user)
+  sendXHR('PUT', '/user', user, cb, token)
+}
+
+export function registerSummoner(summonerName, cb, token) {
+  sendXHR('POST', '/summonerVerificationToken', { summonerName: summonerName }, cb, token)
+}
+
+export function verifySummoner(summonerName, cb) {
+  sendXHR('POST', '/summoner', { summonerName: summonerName}, cb)
 }

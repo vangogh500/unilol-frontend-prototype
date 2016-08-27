@@ -12,7 +12,7 @@ import React from 'react'
 export default class InputField extends React.Component {
   render() {
     return(
-      <div className="input-field col s12 grey-text">
+      <div className={"input-field col grey-text text-darken-1 " + (this.props.width ? this.props.width : "s12")}>
         <i className="material-icons prefix">{this.props.img}</i>
         <input noValidate type={this.props.type} name={this.props.name} value={this.props.model} className={(this.props.errorMsg ? "invalid" : "valid")} />
         <label>{this.props.label}</label>

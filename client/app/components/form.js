@@ -86,12 +86,14 @@ export default class Form extends React.Component {
     var disabled = !this.isFormValid()
     return (
       <div>
-        <form noValidate onChange={(e) => this.handleChange(e)} className="animated slideInRight">
+        <form noValidate onChange={(e) => this.handleChange(e)} className={this.props.className}>
+          <div className="row">
           {
             Object.keys(this.state.fields).map((field, index) => {
               return (
                 <InputField
                   type={this.props.fields[field].type}
+                  width={this.props.fields[field].width}
                   img={this.props.fields[field].img}
                   name={field} errorMsg={this.state.errorMsgs[field]}
                   model={this.state.fields[field]}
@@ -100,6 +102,7 @@ export default class Form extends React.Component {
               )
             })
           }
+          </div>
         </form>
         <button
           onClick={(e) => this.handleClick(e)}

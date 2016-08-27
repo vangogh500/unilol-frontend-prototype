@@ -3,14 +3,15 @@
 var mongoose = require('mongoose');
 
 var UserSchema = mongoose.Schema({
-  fullName: {
+  profile: {
     firstName: String,
-    lastName: String
+    lastName: String,
+    major: String,
+    graduationYear: Number
   },
+  _summoner: { type: Number, unique: true, ref: 'Summoner'},
   email: { type: String, required: true, unique: true},
   password: { type: String, required: true}
 });
 
-var User = mongoose.model('User', UserSchema);
-
-module.exports = User;
+module.exports = mongoose.model('User', UserSchema);

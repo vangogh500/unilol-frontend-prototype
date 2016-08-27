@@ -1,5 +1,5 @@
 /*
- * Container for Login Form
+ * Container for Profile Setup Form
  */
 
 import React from 'react'
@@ -8,22 +8,32 @@ import {validateEmail, validateEdu, validatePassword} from '../util/validation'
 import { connect } from 'react-redux'
 
 /*
- * Fields: email, conEmail, password, conPassword
- *  @email - email of user to login as
- *  @password - password of user to login as
+ * Fields: first name, last name
  */
 const FIELDS = {
-  email: {
-    required: true,
-    img: "account_circle",
-    label: "Email",
-    type: "email"
+  firstName: {
+    required: false,
+    img: "perm_identity",
+    label: "First Name",
+    type: "text"
   },
-  password: {
-    required: true,
-    img: "lock",
-    label: "Password",
-    type: "password"
+  lastName: {
+    required: false,
+    label: "Last Name",
+    type: "text"
+  },
+  major: {
+    required: false,
+    img: "assignment",
+    label: "Field of Study",
+    type: "text",
+    width: "s6"
+  },
+  graduationYear: {
+    required: false,
+    label: "Year of Graduation",
+    type: "number",
+    width: "s6"
   }
 }
 
@@ -60,18 +70,18 @@ const VALIDATOR = (field, value) => {
         return ""
       }
       break;
+    default:
+      return ""
   }
 }
 
-export default class LoginForm extends React.Component {
+export default class ProfileSetupForm extends React.Component {
   render() {
     return (
-      <Form
-        className="animated slideInRight"
-        fields={FIELDS}
+      <Form fields={FIELDS}
         validator={VALIDATOR}
-        buttonLabel="Login"
-        handleClick={(fields) => this.props.handleClick(fields.email, fields.password)}/>
+        buttonLabel="Submit"
+        handleClick={(fields) => this.props.handleClick(fields)}/>
     )
   }
 }

@@ -2,13 +2,15 @@ import React from 'react'
 import AuthApp from './authApp'
 import { connect } from 'react-redux'
 
+
+
 class NavBar extends React.Component {
   constructor(props) {
     super(props)
   }
   render() {
-    var returnRightNav = (isLoggedIn) => {
-      if(isLoggedIn) {
+    var returnRightNav = (user) => {
+      if(user) {
         return (
           <ul className="right nav-right">
             <div>

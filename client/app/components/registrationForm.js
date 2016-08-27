@@ -112,6 +112,7 @@ export default class RegistrationForm extends React.Component {
   render() {
     return (
       <Form fields={FIELDS}
+        className="animated slideInRight"
         validator={VALIDATOR}
         handleClick={(fields) => this.props.handleClick(fields.email, fields.password)}
         buttonLabel="Register" />

@@ -19,6 +19,9 @@ var transporter = nodemailer.createTransport(smtpTransport({
         pass : "umass2016"
     }
 }));
+
+var riot = require('./lib/riot.js');
+
 // connect to db
 mongoose.connect('mongodb://KaiMatsuda:namumyo@ds051595.mlab.com:51595/unilol');
 // secret key for jwt
@@ -26,10 +29,12 @@ var secretKey = "riot-when-is-sandbox-mode-umass-amherst";
 // insert middleware
 app.use(bodyParser.json());
 app.use(express.static('../client/build'));
+
 // import all models
 var User = require('./models/user.js');
 var EmailVerificationToken = require('./models/EmailVerificationToken.js');
-
+var SummonerVerificationToken = require('./models/SummonerVerificationToken.js');
+var Summoner = require('./models/summoner.js')
 
 var RESPONSE_MSGS = require('./serverResponseMsgs.js')
 
@@ -204,7 +209,7 @@ app.post('/login', function(req, res) {
     return;
   }
   var email = loginData.email.trim().toLowerCase();
-  User.findOne({email: email}, 'email password', function(err, found) {
+  User.findOne({email: email}, function(err, found) {
     if(err) {
       res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
       return;
@@ -236,6 +241,188 @@ app.post('/login', function(req, res) {
     }
   });
 });
+
+app.put('/user', function(req, res) {
+  var authorizationLine = req.headers.authorization;
+  var token = authorizationLine.slice(7);
+  jwt.verify(token, secretKey, function(err, data) {
+    if(err) {
+      console.log(err);
+      res.status(401).send();
+    }
+    else {
+      var user = req.body;
+      User.findOne({ _id: data.id, email: user.email }, function(err, found) {
+        if(err) {
+          res.status(500).send();
+        }
+        else if(found) {
+          found.profile = user.profile
+          found.save(function(err) {
+            if(err) {
+              res.status(500).send();
+            }
+            else {
+              found = found.toObject();
+              delete found.password;
+              res.send(found);
+            }
+          })
+        }
+        else {
+          res.status(401).send();
+        }
+      });
+    }
+  });
+});
+
+app.post('/summonerVerificationToken', function(req, res) {
+  var authorizationLine = req.headers.authorization;
+  var token = authorizationLine.slice(7);
+  jwt.verify(token, secretKey, function(err, data) {
+    if(err) {
+      console.log(err);
+      res.status(401).send();
+    }
+    else {
+      var body = req.body;
+      SummonerVerificationToken.findOne({ _user: data.id }, function(err, found) {
+        if(err) {
+          res.status(500).send({ msg: RESPONSE_MSGS.ERROR_500});
+        }
+        else if(found) {
+          if(found.name.toLowerCase() == body.summonerName.toLowerCase()) {
+            console.log("RETURNING CURRENT TOKEN");
+            res.send({ verificationToken: found.token, summonerName: found.name });
+          }
+          else {
+            riot.getSummonerByName(body.summonerName, function(summoner) {
+              console.log("UPDATING TOKEN");
+              found.name = summoner.name;
+              found.summonerId = summoner.id;
+              found.profileIconId = summoner.profileIconId;
+              found.summonerLevel = summoner.summonerLevel;
+              found.save(function(err) {
+                if(err) {
+                  console.log(err);
+                  res.status(500).send({ msg: RESPONSE_MSGS.ERROR_500});
+                }
+                else {
+                  res.send({ verificationToken: found.token, summonerName: summoner.name });
+                }
+              });
+            });
+          }
+        }
+        else {
+          riot.getSummonerByName(body.summonerName, function(summoner) {
+            var summonerVerificationToken = new SummonerVerificationToken({
+              _user: data.id,
+              name: summoner.name,
+              summonerId: summoner.id,
+              profileIconId: summoner.profileIconId,
+              level: summoner.summonerLevel
+            });
+            summonerVerificationToken.createVerificationToken(function(err, token) {
+              if(err) {
+                res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
+                console.log(err);
+              }
+              else {
+                res.send({ verificationToken: token, summonerName: summoner.name });
+              }
+            });
+          });
+        }
+      });
+    }
+  });
+});
+
+app.post('/summoner', function(req,res) {
+  console.log(req.body.summonerName)
+  SummonerVerificationToken.findOne({ name: req.body.summonerName }, function(err, found) {
+    if(err) {
+      return res.status(500).send({ msg: RESPONSE_MSGS.ERROR_500});
+    }
+    else if(found) {
+      riot.getMasteriesById(found.summonerId, function(masteries) {
+        var isValid = false;
+        for(var i in masteries) {
+          if(masteries[i].name == found.token) {
+            isValid = true;
+          }
+        }
+        if(isValid) {
+          riot.getRankedById(found.summonerId, function(stats) {
+            User.findOne({ _id: found._user }, function(err, user) {
+              if(err) {
+                return res.status(500).send({msg: RESPONSE_MSGS.ERROR_500 });
+              }
+              else if(found) {
+                var summoner = new Summoner({
+                  _id: found.summonerId,
+                  _user: found._user,
+                  name: found.name,
+                  profileIconId: found.profileIconId,
+                  level: found.level,
+                  rankedStats: {
+                    soloQ: {
+                      divisionName: stats.name,
+                      tier: stats.tier,
+                      division: stats.entries[0].division,
+                      leaguePoints: stats.entries[0].leaguePoints,
+                      entry: {
+                        isFreshBlood: stats.entries[0].isFreshBlood,
+                        isHotStreak: stats.entries[0].isHotStreak,
+                        isInactive: stats.entries[0].isInactive,
+                        isVeteran: stats.entries[0].isVeteran,
+                        playstyle: stats.entries[0].playstyle,
+                        wins: stats.entries[0].wins,
+                        losses: stats.entries[0].losses
+                      }
+                    }
+                  }
+                });
+                summoner.save(function(err) {
+                  if(err) {
+                    res.status(500).send({ msg: RESPONSE_MSGS.ERROR_500 });
+                  }
+                  else {
+                    found.remove();
+                    user._summoner = summoner._id;
+                    user.save(function(err) {
+                      if(err) {
+                        res.status(500).send({ msg: RESPONSE_MSGS.ERROR_500 });
+                      }
+                      else {
+                        user = user.toObject();
+                        delete user.password;
+                        res.send({summoner: summoner.toObject(), user: user});
+                      }
+                    })
+                  }
+                });
+              }
+              else {
+                return res.status(500).send({ msg: RESPONSE_MSGS.ERROR_500 });
+              }
+            });
+          });
+        }
+        else {
+          res.status(404).send({ msg: "Could not verify your summoner account. Please make sure that you have correctly copied the code into your mastery page and try again."});
+        }
+      });
+    }
+    else {
+      res.status(404).send({msg: RESPONSE_MSGS.ERROR_500});
+    }
+  });
+});
+
+
 
 // Starts the server on port 3000!
 app.listen(3000, function () {

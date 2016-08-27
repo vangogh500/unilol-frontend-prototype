@@ -1,13 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom';
-import { Router, Route, IndexRoute, browserHistory } from 'react-router'
+import { Router, Route, IndexRoute, hashHistory } from 'react-router'
 import NavApp from './containers/navApp'
-import Profile from './components/profile'
+import ProfileApp from './containers/profileApp'
 import EmailVerification from './components/emailVerification'
 import thunk from 'redux-thunk'
 import { createStore, applyMiddleware } from 'redux'
 import unilol from './reducers'
 import { Provider } from 'react-redux'
+import { loginFromStorage } from './actions'
 
 var Banner = React.createClass({
   render() {
@@ -56,15 +57,15 @@ class App extends React.Component {
 
 var store = applyMiddleware(thunk)(createStore)(unilol)
 
-console.log(store.getState())
+store.dispatch(loginFromStorage())
 
 ReactDOM.render((
   <Provider store={store}>
-    <Router history={browserHistory}>
+    <Router history={hashHistory}>
       <Route path="/" component={App}>
         <IndexRoute component={Banner}/>
         <Route path="verifyEmail/:token" component={EmailVerification} />
-        <Route path="profile" component={Profile} />
+        <Route path="profile" component={ProfileApp} />
       </Route>
     </Router>
   </Provider>

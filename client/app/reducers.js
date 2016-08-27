@@ -1,4 +1,4 @@
-import { REQUEST_LOGIN, LOGIN_SUCCESS } from './actions'
+import { UPDATE_USER, LOGIN_SUCCESS } from './actions'
 
 const initialState = {
   user: null,
@@ -12,6 +12,10 @@ export default function unilol(state = initialState, action) {
         fetching: false,
         user: action.authData.user,
         token: action.authData.token
+      })
+    case UPDATE_USER:
+      return Object.assign({}, state, {
+        user: action.user
       })
     default:
       return state
