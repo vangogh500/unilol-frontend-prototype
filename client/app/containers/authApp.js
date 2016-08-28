@@ -40,6 +40,7 @@ class AuthTray extends React.Component {
     this.setState({ view: LOADING, previous_view: LOGIN })
     signIn(email, password, (success, res) => {
       if(success) {
+        console.log(res)
         this.setState({ view: SUCCESS, serverMsg: res.msg, resCode: res.statusCode })
         this.props.onLoginClick(res)
       }
@@ -53,7 +54,6 @@ class AuthTray extends React.Component {
     signUp(email, password, (success, res) => {
       if(success) {
         this.setState({ view: SUCCESS, serverMsg: res.msg, resCode: res.statusCode })
-        this.props.onLoginClick(res)
       }
       else {
         this.setState({ view: FAILURE, serverMsg: res.msg, resCode: res.statusCode })

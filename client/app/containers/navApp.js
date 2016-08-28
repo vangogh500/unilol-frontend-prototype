@@ -1,21 +1,26 @@
 import React from 'react'
 import AuthApp from './authApp'
+import { Link } from 'react-router'
 import { connect } from 'react-redux'
+import { logout } from '../actions'
 
 
 
 class NavBar extends React.Component {
-  constructor(props) {
-    super(props)
-  }
   render() {
     var returnRightNav = (user) => {
+      console.log(user)
       if(user) {
         return (
           <ul className="right nav-right">
             <div>
-              <li><a className="waves-effect waves-light">Profile</a></li>
-              <li><a className="waves-effect waves-light">Logout</a></li>
+              <li className="input-field main-search">
+                <input id="search" type="search" required />
+                <label htmlFor="search"><i className="material-icons float-left">search</i><span className="search_label">Search University..</span></label>
+              </li>
+              <li><Link to='/profile' className="waves-effect waves-light"><span><i className="tiny material-icons float-left">perm_identity</i>Vangogh</span></Link></li>
+              <li><a onClick={(e) => this.props.onLogoutClick(e)} className="waves-effect waves-light">Logout</a></li>
+
             </div>
           </ul>
         )
@@ -40,6 +45,7 @@ class NavBar extends React.Component {
 }
 
 const MAP_STATE_TO_PROPS = (state, ownProps) => {
+  console.log(state)
   return {
     user: state.user
   }
@@ -47,6 +53,10 @@ const MAP_STATE_TO_PROPS = (state, ownProps) => {
 
 const MAP_DISPATCH_TO_PROPS = (dispatch, ownProps) => {
   return {
+    onLogoutClick: (e) => {
+      e.preventDefault()
+      dispatch(logout())
+    }
   }
 }
 

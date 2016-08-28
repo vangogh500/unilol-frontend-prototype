@@ -14,7 +14,7 @@ nav {
   height: 120%;
 }
 
-.nav-right a {
+.nav-right li {
   border-left: 1px solid #333;
 }
 
@@ -129,9 +129,13 @@ nav {
   margin-top: 20px;
 }
 
-.container.main {
+.main {
   display: table;
   min-height: 75vh;
+}
+
+.wide {
+  width: 100%;
 }
 
 .setup {
@@ -149,4 +153,70 @@ nav {
 
 .setup .verify {
   margin: 60px 100px 0px 100px;
+}
+
+.profile {
+  margin-top: 40px;
+}
+
+.profile .badge {
+  position: relative;
+  right: auto;
+}
+
+.profile .badge.new:after {
+  content: "";
+}
+
+.profile #profileIcon {
+  padding: 6px;
+  margin-right: 40px;
+}
+
+.vertically-aligned {
+  display: flex;
+  align-items: center;
+}
+
+.summoner-name {
+  margin-right: 5px;
+}
+
+.float-left {
+  float: left;
+}
+
+.block {
+  display: block;
+}
+
+.inline {
+  display: inline-block;
+}
+
+.widget {
+  min-height: 40px;
+  border-radius: 5px;
+  border: 2px solid #AAA;
+}
+
+.school {
+  padding: 10px;
+  margin: 0px;
+}
+
+.profile-left-top {
+  margin-bottom: 50px;
+}
+
+.main-search {
+  height: 64px;
+}
+
+.main-search label.active .search_label {
+  visibility: hidden;
+}
+
+.margin-top-80 {
+  margin-top: 80px;
 }

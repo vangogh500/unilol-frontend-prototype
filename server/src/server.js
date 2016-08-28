@@ -35,6 +35,7 @@ var User = require('./models/user.js');
 var EmailVerificationToken = require('./models/EmailVerificationToken.js');
 var SummonerVerificationToken = require('./models/SummonerVerificationToken.js');
 var Summoner = require('./models/summoner.js')
+var School = require('./models/school.js')
 
 var RESPONSE_MSGS = require('./serverResponseMsgs.js')
 
@@ -169,14 +170,31 @@ app.post('/user', function(req, res) {
       res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
     }
     else if(token) {
-      var newUser = new User({email: token.email, password: token.password});
-      newUser.save(function(err) {
+      var domain = token.email.split('@')[1].split('.')[0];
+      console.log(domain);
+      School.findOne({ domain: domain}, function(err, school) {
         if(err) {
           res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
         }
-        else {
-          token.remove();
-          res.send({msg: SUCCESS_200});
+        else if(school) {
+          var newUser = new User({email: token.email, password: token.password});
+          newUser.save(function(err) {
+            if(err) {
+              res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
+            }
+            else {
+              token.remove();
+              school.roster.push(newUser._id);
+              school.save(function(err) {
+                if(err) {
+                  res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
+                }
+                else {
+                  res.send({msg: SUCCESS_200});
+                }
+              });
+            }
+          });
         }
       });
     }
@@ -224,11 +242,41 @@ app.post('/login', function(req, res) {
             console.log("test");
             found = found.toObject();
             delete found.password;
-            res.send({
-              user: found,
-              token: token,
-              msg: "Success! Please continue to your profile page"
-            });
+            if(found._summoner) {
+              Summoner.findOne({ _id: found._summoner }, function(err, summoner) {
+                if(err) {
+                  res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
+                }
+                else if(summoner) {
+                  summoner = summoner.toObject();
+                  var domain = found.email.split('@')[1].split('.')[0];
+                  School.findOne({ domain: domain }, function(err, school) {
+                    if(err) {
+                      res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
+                    }
+                    else if(school) {
+                      res.send({
+                        user: found,
+                        token: token,
+                        summoner: summoner,
+                        school: school,
+                        msg: "Success! Please continue to your profile page"
+                      });
+                    }
+                  });
+                }
+                else {
+                  res.status(500).send({msg: RESPONSE_MSGS.ERROR_500});
+                }
+              });
+            }
+            else {
+              res.send({
+                user: found,
+                token: token,
+                msg: "Success! Please continue to your profile page"
+              });
+            }
           });
         }
         else {
@@ -265,7 +313,7 @@ app.put('/user', function(req, res) {
             else {
               found = found.toObject();
               delete found.password;
-              res.send(found);
+              res.send({user: found });
             }
           })
         }
@@ -360,7 +408,7 @@ app.post('/summoner', function(req,res) {
               if(err) {
                 return res.status(500).send({msg: RESPONSE_MSGS.ERROR_500 });
               }
-              else if(found) {
+              else if(user) {
                 var summoner = new Summoner({
                   _id: found.summonerId,
                   _user: found._user,
@@ -418,6 +466,25 @@ app.post('/summoner', function(req,res) {
     }
     else {
       res.status(404).send({msg: RESPONSE_MSGS.ERROR_500});
+    }
+  });
+});
+
+app.post('/school', function(req, res) {
+  var data = req.body;
+  var school = new School({
+    _id: data.id,
+    bannerUrl: data.bannerUrl,
+    domain: data.domain,
+    roster: [],
+    admins: []
+  });
+  school.save(function(err) {
+    if(err) {
+      res.status(500).send({ msg: RESPONSE_MSGS.ERROR_500});
+    }
+    else {
+      res.send();
     }
   });
 });
