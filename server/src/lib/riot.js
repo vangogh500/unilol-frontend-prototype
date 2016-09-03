@@ -67,3 +67,26 @@ exports.getRankedById = function(summonerId, cb) {
 		return cb();
 	});
 }
+
+exports.getRankedByIds = function(summonerIds, cb) {
+	var opts = {
+		hostname: 'na.api.pvp.net',
+		method: 'GET',
+		path: '/api/lol/na/v2.5/league/by-summoner/' + summonerIds + '/entry',
+		headers: {
+			'X-Riot-Token': apiToken
+		}
+	};
+	makeRequest(opts, function(data) {
+		Object.keys(data).map(function(id) {
+			var entries = data[id]
+			for(var i in entries) {
+				if(entries[i].queue == 'RANKED_SOLO_5x5')  {
+					return data[id] = entries[i]
+				}
+			}
+			return data[id] = null
+		})
+		cb(data)
+	});
+}

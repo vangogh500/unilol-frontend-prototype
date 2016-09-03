@@ -3,10 +3,10 @@ import { connect } from 'react-redux'
 import ProfileSetupForm from '../components/profileSetupForm'
 import SummonerSetupForm from '../components/summonerSetupForm'
 import { updateProfile, registerSummoner, verifySummoner } from '../server'
-import { updateUser, updateSummoner } from '../actions'
+import { updateUser, updateSummoner, update } from '../actions'
 
 /*
- * Views for the ProfileApp
+ * Views for the Profile Setup App
  */
 const WELCOME = "WELCOME"
 const PROFILE_SETUP = "PROFILE_SETUP"
@@ -160,11 +160,10 @@ const MAP_STATE_TO_PROPS = (state, ownProps) => {
 const MAP_DISPATCH_TO_PROPS = (dispatch, ownProps) => {
   return {
     onProfileSetupClick: (user) => {
-      dispatch(updateUser(user))
+      dispatch(update({user: user}))
     },
     onVerifySummonerClick: (user, summoner) => {
-      dispatch(updateUser(user))
-      dispatch(updateSummoner(summoner))
+      dispatch(update({user: user, summoner: summoner}))
     }
   }
 }

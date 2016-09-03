@@ -96,3 +96,15 @@ export function registerSummoner(summonerName, cb, token) {
 export function verifySummoner(summonerName, cb) {
   sendXHR('POST', '/summoner', { summonerName: summonerName}, cb)
 }
+
+export function getSchool(id, cb) {
+  sendXHR('GET', '/school/' + id, {}, cb)
+}
+
+export function getUser(id, cb) {
+  sendXHR('GET', '/user/' + id, {}, cb)
+}
+
+export function rsvp(eventId, cb, token) {
+  sendXHR('POST', 'events/rsvp/' + eventId, {}, cb, token)
+}

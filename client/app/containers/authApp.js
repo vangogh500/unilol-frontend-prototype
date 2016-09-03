@@ -1,4 +1,15 @@
-// Login/Register button functionality goes here
+/*
+ * A right nav components representing an authorization app for pre login logic
+ * props: onLoginClick
+ *  @onLoginClick - a function that handles the server response.
+ *    response attributes: token, user, summoner, school
+ * state attributes: view, previous_view, serverMsg, resCode
+ *  @view - represents the current view of the app
+ *  @previous_view - represents the previous view of the app
+ *  @serverMsg - msg from the server
+ *  @resCode - response status code
+ * TODO: password reset, resend verification email
+ */
 import React from 'react'
 import {Modal, Tabs, Tab, Row, Input, Icon} from 'react-materialize'
 import {signUp, resendEmailVerification, signIn} from '../server'
@@ -8,6 +19,8 @@ import ResetPasswordForm from '../components/resetPasswordForm'
 import { connect } from 'react-redux'
 import { login } from '../actions'
 
+
+// Views in the app
 const MENU = "MENU"
 const LOGIN = "LOGIN"
 const SUCCESS = "SUCCESS"
@@ -40,7 +53,6 @@ class AuthTray extends React.Component {
     this.setState({ view: LOADING, previous_view: LOGIN })
     signIn(email, password, (success, res) => {
       if(success) {
-        console.log(res)
         this.setState({ view: SUCCESS, serverMsg: res.msg, resCode: res.statusCode })
         this.props.onLoginClick(res)
       }
@@ -61,6 +73,9 @@ class AuthTray extends React.Component {
     })
   }
   render() {
+    /*
+     * View handler
+     */
     var returnView = () => {
       var tab = <ul className="tabs">
         <li className="tab grey darken-4 col s6"><a name={LOGIN} onClick={(e) => this.handleView(e)}>Login</a></li>
@@ -119,14 +134,6 @@ class AuthTray extends React.Component {
           return
       }
     }
-    //resend verification link
-    /*
-    else if(this.state.mode == 5){
-      formContent = <div>
-        <h5 className="blue-text center">Resend Verification Link</h5>
-        <ResetPasswordForm />
-      </div>;
-    } */
     return (
       <ul className="right nav-right">
         <Modal
@@ -153,6 +160,8 @@ const MAP_STATE_TO_PROPS = (state, ownProps) => {
 const MAP_DISPATCH_TO_PROPS = (dispatch, ownProps) => {
   return {
     onLoginClick: (res) => {
+      delete res.statusCode
+      console.log(res)
       dispatch(login(res))
     }
   }

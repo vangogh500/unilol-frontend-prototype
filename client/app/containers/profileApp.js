@@ -1,4 +1,6 @@
 import React from 'react'
+import { Link } from 'react-router'
+
 import ProfileSetupApp from './profileSetupApp'
 import { hashHistory } from 'react-router'
 import { connect } from 'react-redux'
@@ -11,6 +13,7 @@ class ProfilePage extends React.Component {
       alert("Uh oh. Something went wrong. Please try logging in again.")
       hashHistory.push('/')
     }
+
   }
   render() {
     var getRankColor = (rankedStats) => {
@@ -57,7 +60,9 @@ class ProfilePage extends React.Component {
                 </div>
               </div>
               <div className="col s2">
-                <p className="teal lighten-1 white-text school z-depth-1">University of Massachussetts Amherst</p>
+                <Link className="waves-effect btn height-auto" to={"school/" + this.props.user.email.split('@')[1].split('.')[0]}>
+                  <p className="white-text school">University of Massachussetts Amherst</p>
+                </Link>
                 <div className="section">
                   <h6>Teams</h6>
                 </div>

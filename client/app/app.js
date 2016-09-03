@@ -3,31 +3,20 @@ import ReactDOM from 'react-dom';
 import { Router, Route, IndexRoute, hashHistory } from 'react-router'
 import NavApp from './containers/navApp'
 import ProfileApp from './containers/profileApp'
-import EmailVerification from './components/emailVerification'
+import HomeApp from './containers/homeApp'
+
 import thunk from 'redux-thunk'
 import { createStore, applyMiddleware } from 'redux'
 import unilol from './reducers'
 import { Provider } from 'react-redux'
 import { loginFromStorage } from './actions'
 
-var Banner = React.createClass({
-  render() {
-    return(
-      <div className="banner-container">
-        <img id="banner" className="center" src="img/banner.jpg" />
-        <div className="row container searchbar">
-          <form className="animated fadeInDown">
-            <div id="search" className="input-field">
-              <input placeholder="Search for your school now!"type="search" required />
-              <label htmlfor="search"><i className="material-icons prefix">search</i></label>
-              <i className="material-icons postfix">close</i>
-            </div>
-          </form>
-        </div>
-      </div>
-    )
-  }
-})
+import EmailVerification from './components/emailVerification'
+import School from './components/school'
+import Leaderboard from './components/leaderboard'
+import EventListing from './components/eventListing'
+import Event from './components/event'
+import User from './components/user'
 
 var Footer =  React.createClass({
   render() {
@@ -63,9 +52,15 @@ ReactDOM.render((
   <Provider store={store}>
     <Router history={hashHistory}>
       <Route path="/" component={App}>
-        <IndexRoute component={Banner}/>
+        <IndexRoute component={HomeApp}/>
         <Route path="verifyEmail/:token" component={EmailVerification} />
         <Route path="profile" component={ProfileApp} />
+        <Route path="school/:id" component={School}>
+          <IndexRoute component={Leaderboard} />
+          <Route path="events" component={EventListing} />
+          <Route path="events/:eventId" component={Event} />
+        </Route>
+        <Route path="user/:id" component={User} />
       </Route>
     </Router>
   </Provider>
